@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 
 public class Main{
@@ -11,17 +12,19 @@ public class Main{
         try{
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
-            clientSocket = serverSocket.accept();
 
-            InputStream inputStream = clientSocket.getInputStream();
-            OutputStream outputStream = clientSocket.getOutputStream();
-            Scanner sc = new Scanner(inputStream);
-            while(sc.hasNextLine()){
-                String nextLine = sc.nextLine();
-                if(nextLine.contains("PING")){
-                    outputStream.write("+PONG\r\n".getBytes());
-                }
-            } 
+            while(true){
+                clientSocket = serverSocket.accept();
+                Socket finalClienSocket = clientSocket;
+                
+                CompletableFuture.runAsync(()->{
+                    try{
+                        handleClient(finalClienSocket);
+                    }catch(IOException e){
+                        throw new RuntimeException(e);
+                    }               
+                 });
+            }
         }catch(IOException e){
             System.out.println("IOException: "+e.getMessage());
         }finally{
@@ -31,6 +34,18 @@ public class Main{
                 }
             }catch(IOException e){
                 System.out.println("IOException: "+e.getMessage());
+            }
+        }
+    }
+
+    public static void handleClient(Socket clientSocket) throws IOException{
+        InputStream inputStream = clientSocket.getInputStream();
+        OutputStream outputStream = clientSocket.getOutputStream();
+            Scanner sc = new Scanner(inputStream);
+        while(sc.hasNextLine()){
+            String nextLine = sc.nextLine();
+            if(nextLine.contains("PING")){
+                outputStream.write("+PONG\r\n".getBytes());
             }
         }
     }
