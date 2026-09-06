@@ -44,9 +44,25 @@ public class Main{
             Scanner sc = new Scanner(inputStream);
         while(sc.hasNextLine()){
             String nextLine = sc.nextLine();
+            System.out.println(nextLine);
             if(nextLine.contains("PING")){
                 outputStream.write("+PONG\r\n".getBytes());
             }
+            if(nextLine.contains("ECHO")){
+                String respHeader = sc.nextLine();
+                String respBody = sc.nextLine();
+                String response = respHeader+"\r\n"+respBody+"\r\n";
+                outputStream.write(response.getBytes());
+            }
         }
+    }
+
+    public static String encodingReString(String s){
+        String resp = "$";
+        resp+=s.length();
+        resp+="\r\n";
+        resp+=s;
+        resp+="\r\n";
+        return resp;
     }
 }
